@@ -3,10 +3,51 @@
 #include "decimal2binary.h"
 #include "arrayShift.h"
 //divide data into left and right blocks
+//num offunctions
+//1.populateHalves
+//2.XOR
+//3.func
+//4.readFile
+//5.writeFile
+int decimal[264144];
 
-int decimal[1024];
 
 
+
+void writeFile(char *name,int array[],int size){
+	FILE *file;
+	file=fopen(name,"wb");
+	if (file==NULL)
+	{
+		printf("Error opening file during write operation!");
+		exit(1);
+	}
+	fwrite(array, sizeof(int), size, file);
+	
+	
+	
+	
+
+}
+void readFile(char *name,char *string){
+	FILE *file;
+	file=fopen(name,"r");
+	if (file==NULL)
+	{
+		printf("Error reading file");
+		exit(1);
+	}
+	char character;
+	int i=0;
+	while (character!=EOF)
+	{
+		character=fgetc(file);
+		string[i]=character;
+		i++;
+	}
+	
+	
+}
 void populateHalves(int binary[],int R[],int L[],int size){
 	int r=size;
 	for (int i = 0; i < size; ++i)
@@ -40,8 +81,10 @@ void func(int array[],int size,int key){
 	{
 		if (array[i]==0)
 		{
-			array[i]=1+key;
-		}else{array[i]=9+key;}
+			array[i]=(9+key*2-32);
+		}else{
+			array[i]=(19-key*2+14);
+		}
 	}
 }
 void encrypt(int R[],int L[],int divide,int key){
@@ -55,7 +98,7 @@ void encrypt(int R[],int L[],int divide,int key){
 	copyArray(X0,R,divide);
 	copyArray(X1,L,divide);
 	int pc=0;
-	
+    int r=33;	
 	for (int i = 0; i <=key; ++i)
 	{
 		if (i%2==0)
@@ -63,7 +106,7 @@ void encrypt(int R[],int L[],int divide,int key){
 			//this part receives X0 and X1
 			//it outputs X2 and X3
 		    copyArray(buffer,X1,divide);	
-			func(X1,divide,i);
+			func(X1,divide,key);
 	        XOR(X0,X1,divide);
 	        copyArray(X2,buffer,divide);
 	        copyArray(X3,X0,divide);
@@ -75,7 +118,7 @@ void encrypt(int R[],int L[],int divide,int key){
 			//this part receives X2 and X3
 			//it outputs X0 and X1
 			copyArray(buffer,X3,divide);
-			func(X3,divide,i);
+			func(X3,divide,key);
 	        XOR2(X2,X3,divide);
 
 	        copyArray(X0,buffer,divide);
@@ -96,73 +139,29 @@ void encrypt(int R[],int L[],int divide,int key){
 		copyArray(L,X0,divide);
 	}
 }
-void decrypt(int R[],int L[],int divide,int key){
-	int buffer[divide];
 
-	int X0[divide];
-	int X1[divide];
-	int X2[divide];
-	int X3[divide];
-	int X4[divide];
-	copyArray(X0,R,divide);
-	copyArray(X1,L,divide);
-	int pc=0;
-	int tc=0;
-	int i=key;
-	do
-	{
-		if (tc==0)
-		{
-			//this part receives X0 and X1
-			//it outputs X2 and X3
-		    copyArray(buffer,X1,divide);	
-			func(X1,divide,i);
-	        XOR(X0,X1,divide);
-
-	        copyArray(X2,buffer,divide);
-	        copyArray(X3,X0,divide);
-	        pc=1;
-	        tc=1;
-	        //it will have two outputs both of which will be fed to 
-	        //the next round
-	        //the first output we call it L and the second R
-		}else{
-			//this part receives X2 and X3
-			//it outputs X0 and X1
-			copyArray(buffer,X3,divide);
-			func(X3,divide,i);
-	        XOR2(X2,X3,divide);
-
-	        copyArray(X0,buffer,divide);
-	        copyArray(X1,X3,divide);
-            tc=0;
-	        pc=0;
-	        
-		}
-		--i;
-	}while(i>=0);
-	if (pc==1)
-	{
-		combineArrays(X3,X2,divide);
-		copyArray(R,X3,divide);
-		copyArray(L,X2,divide);
-	}else{
-		combineArrays(X1,X0,divide);
-		copyArray(R,X1,divide);
-		copyArray(L,X0,divide);
-	}
-}
 int main()
 {
 	//input
-	int rounds;
-	char string[1024];
+	int key;
+	char fileName[20];
+	char string[264144];
 	printf("Enter Text: ");
-    scanf("%[^\n]",&string);
-    printf("Enter rounds: ");
-    scanf("%d",&rounds);
+    scanf("%[^\n]",&fileName);
+    printf("Enter key: ");
+    scanf("%d",&key);
    
-	int size=getStringLength(string);
+    int size=fileSize(fileName);
+	printf("%d",size);
+	if (size>33018)
+	{
+		printf("File too big(max is 128 characters)");
+		exit(1);
+	}
+    readFile(fileName,string);
+	
+
+	
 	int numOfBits=(size*8);
 	int divide=numOfBits/2;
 	int L[divide];
@@ -180,14 +179,15 @@ int main()
 	//rounds to perform with this operation?Just 1 round then test it for n rounds
     populateHalves(binary,R,L,divide);
   
-    encrypt(R,L,divide,rounds);
-    printf("%s\n","Ciphertext-------");
-    printText(binary,size*8);
+    encrypt(R,L,divide,key);
+	printArray(binary,size*8);
+	
+
+	//ArrayOut(binary,size);
     printf("\n");
-  
-    decrypt(R,L,divide,rounds);
-    printf("Text=");
-    printText(binary,size*8);
+    
+
+    writeFile("output",binary,size*8);
     
 
 
