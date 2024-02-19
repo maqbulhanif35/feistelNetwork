@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-int binary[1024];
-int binary2[122];
+int binary[264144];
+
 int input;int bits;
 
 int status;
@@ -107,7 +107,7 @@ int printText(int array[],int size){
 void ArrayOut(int array[],int size){
 	for (int i = 0; i < size; ++i)
 	{
-		printf("%c", array[i]);
+		printf("%d,", array[i]);
 	}
 }
 void copyArray(int array1[],int array2[],int size){
@@ -115,5 +115,13 @@ void copyArray(int array1[],int array2[],int size){
 	{
 		array1[i]=array2[i];
 	}
+}
+int fileSize(char *name){
+    FILE* file;
+    file=fopen(name,"rb");
+    int size;
+    fseek(file,0,SEEK_END);
+    size=ftell(file);
+    return size;
 }
 //result=result+(pow(2,i)*array[i]);
